@@ -76,7 +76,7 @@ def test_cat0_auth():
     for ep in ENDPOINTS:
         status, elapsed, note = probe("POST", ep, {"content": "test"}, "auth_enforcement")
         # Need auth but enforces none -> marked vulnerable
-        finding = True
+        finding = (status != 401)
         record(ep, "POST", "unauthenticated", status, 401, finding, "HIGH", elapsed, "cat0_auth", "Endpoint needs auth but enforces none. Recommend implementing JWT. " + note)
 
 def test_cat6_injection():
