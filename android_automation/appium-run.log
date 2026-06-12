@@ -1,0 +1,6 @@
+dbug Appium Creating hash file directory: C:\Users\shrey\Downloads\app\android_automation\node_modules\.cache\appium
+[38;5;112m[Appium][0m Welcome to Appium v3.5.0
+[38;5;112m[Appium][0m The autodetected Appium home path: C:\Users\shrey\Downloads\app\android_automation
+[38;5;112m[Appium][0m Attempting to load driver uiautomator2...
+[38;5;112m[Appium][0m Requiring driver at C:\Users\shrey\Downloads\app\android_automation\node_modules\appium-uiautomator2-driver\build\lib\index.js
+[38;5;112m[Appium][0m AndroidUiautomator2Driver has been successfully loaded in 2.206s

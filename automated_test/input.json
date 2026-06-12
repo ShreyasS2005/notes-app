@@ -1,0 +1,4 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "note": "No role tokens exist — the API has zero auth middleware. Tests will verify this."
+}

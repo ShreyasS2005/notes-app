@@ -1,0 +1,24 @@
+{
+  "name": "smart-notes-backend",
+  "version": "1.0.0",
+  "description": "Backend API for SmartNotes AI as Firebase Functions",
+  "main": "server.js",
+  "scripts": {
+    "serve": "firebase serve --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run serve",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.0"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

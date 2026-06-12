@@ -1,0 +1,35 @@
+name: Selenium E2E Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  selenium-e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: web_portal
+        run: npm install
+
+      - name: Run Selenium E2E tests
+        working-directory: web_portal
+        run: HEADLESS=true npm test
+
+      - name: Upload Selenium report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-report
+          path: web_portal/reports/selenium-test-report.xlsx

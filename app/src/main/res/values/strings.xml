@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AI Study Companion</string>
+    <!-- Updated Web Client ID for Google Sign-In -->
+    <string name="default_web_client_id">593101189044-266ihi8v3bomt8nldoha5pgq7gfhj2jh.apps.googleusercontent.com</string>
+</resources>
