@@ -43,7 +43,7 @@ steps:
 
       HEADLESS=true npm test || true
 
-  - name: Publish Test Results
+  - name: Appium Test Results
     if: always()
     uses: mikepenz/action-junit-report@v5
     with:
