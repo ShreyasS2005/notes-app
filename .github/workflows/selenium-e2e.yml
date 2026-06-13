@@ -1,61 +1,82 @@
-name: E2E Tests Report
+name: E2E Tests Reports
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+push:
+branches: [main]
+pull_request:
+branches: [main]
 
 jobs:
-  e2e-tests:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run E2E tests locally
-        run: npm run test:e2e
-        continue-on-error: true
-      
-      - name: Collect Appium reports
-        if: always()
-        run: |
-          mkdir -p appium-reports
-          # Copy locally generated Appium reports without modification
-          if [ -d "./appium-reports" ]; then
-            cp -r ./appium-reports/* appium-reports/ || true
-          fi
-          if [ -d "./test-reports" ]; then
-            cp -r ./test-reports/* appium-reports/ || true
-          fi
-      
-      - name: Upload Appium test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: appium-test-reports
-          path: appium-reports/
-          retention-days: 30
-      
-      - name: Generate workflow summary
-        if: always()
-        run: |
-          echo "## E2E Test Report Generated" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Timestamp**: $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Appium reports collected and archived" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Reports Location**: Artifacts tab - appium-test-reports" >> $GITHUB_STEP_SUMMARY
+selenium-e2e:
+name: Selenium E2E Tests
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Setup Node.js
+    uses: actions/setup-node@v5
+    with:
+      node-version: "20"
+
+  - name: Install web dependencies
+    working-directory: website
+    run: npm install
+
+  - name: Run Selenium Tests
+    working-directory: website
+    run: |
+      npm run dev &
+
+      for i in {1..60}; do
+        if curl -s http://localhost:3000 > /dev/null; then
+          break
+        fi
+        sleep 2
+      done
+
+      HEADLESS=true npm test
+
+  - name: Publish Selenium Test Results
+    if: always()
+    uses: mikepenz/action-junit-report@v5
+    with:
+      report_paths: "website/reports/**/*.xml"
+      detailed_summary: true
+      include_passed: true
+
+  - name: Upload Selenium Report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: selenium-test-report
+      path: website/reports/
+```
+
+appium-report:
+name: Publish Existing Appium Results
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Publish Appium Test Results
+    if: always()
+    uses: mikepenz/action-junit-report@v5
+    with:
+      report_paths: "android_automation/reports/**/*.xml"
+      detailed_summary: true
+      include_passed: true
+      fail_on_failure: false
+
+  - name: Upload Appium Report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: android-appium-report
+      path: android_automation/reports/
+```
