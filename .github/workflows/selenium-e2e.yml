@@ -1,76 +1,73 @@
-name: E2E Tests Reports
+name: E2E Tests (Web & Android)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+push:
+branches:
+- main
+pull_request:
+branches:
+- main
 
 jobs:
-  selenium-e2e:
-    name: Selenium E2E Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+selenium-e2e:
+name: Selenium E2E Web Tests
+runs-on: ubuntu-latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: "20"
+```
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Install web dependencies
-        working-directory: website
-        run: npm install
+  - name: Setup Node.js
+    uses: actions/setup-node@v5
+    with:
+      node-version: "20"
 
-      - name: Run Selenium Tests
-        working-directory: website
-        run: |
-          npm run dev &
+  - name: Install web dependencies
+    working-directory: website
+    run: npm install
 
-          for i in {1..60}; do
-            if curl -s http://localhost:3000 > /dev/null; then
-              break
-            fi
-            sleep 2
-          done
+  - name: Run Selenium E2E tests
+    working-directory: website
+    run: |
+      npm run dev &
 
-          HEADLESS=true npm test
+      echo "Waiting for Next.js server..."
+      for i in {1..60}; do
+        if curl -s http://localhost:3000 > /dev/null; then
+          echo "Server is up!"
+          break
+        fi
+        sleep 2
+      done
 
-      - name: Publish Selenium Test Results
-        if: always()
-        uses: mikepenz/action-junit-report@v5
-        with:
-          report_paths: "website/reports/**/*.xml"
-          detailed_summary: true
-          include_passed: true
+      HEADLESS=true npm test
 
-      - name: Upload Selenium Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: selenium-test-report
-          path: website/reports/
+  - name: Upload Selenium report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: selenium-test-report
+      path: website/reports/
+```
 
-  appium-report:
-    name: Publish Existing Appium Results
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+appium-report:
+name: Upload Existing Appium Report
+runs-on: ubuntu-latest
+needs: selenium-e2e
 
-      - name: Publish Appium Test Results
-        if: always()
-        uses: mikepenz/action-junit-report@v5
-        with:
-          report_paths: "android_automation/reports/**/*.xml"
-          detailed_summary: true
-          include_passed: true
-          fail_on_failure: false
+```
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Upload Appium Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-appium-report
-          path: android_automation/reports/
+  - name: Wait 2 minutes before Appium report upload
+    run: sleep 120
+
+  - name: Upload Existing Appium Report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: android-appium-report
+      path: android_automation/reports/android-appium-report_2026-06-11T14-55-56.xlsx
+```
