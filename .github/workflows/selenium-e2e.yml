@@ -2,9 +2,11 @@ name: E2E Tests (Web & Android)
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   selenium-e2e:
@@ -18,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install web dependencies
         working-directory: website
@@ -28,8 +30,16 @@ jobs:
         working-directory: website
         run: |
           npm run dev &
-          # Wait for Next.js to start
-          for i in {1..30}; do curl -s http://localhost:3000 && break || sleep 2; done
+
+          echo "Waiting for Next.js server..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "Server is up!"
+              break
+            fi
+            sleep 2
+          done
+
           HEADLESS=true npm test
 
       - name: Upload Selenium report
@@ -50,15 +60,15 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: zulu
+          java-version: "17"
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: "20"
 
-      - name: Install Appium & UiAutomator2 Driver
+      - name: Install Appium
         run: |
           npm install -g appium
           appium driver install uiautomator2
@@ -76,35 +86,57 @@ jobs:
       - name: Run Appium Tests on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: true
-          emulator-options: -no-snapshot-load -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          api-level: 29
+          target: default
+          arch: x86
+          profile: pixel
+          emulator-boot-timeout: 900
           disable-animations: true
+          force-avd-creation: true
+          emulator-options: >-
+            -no-snapshot
+            -no-window
+            -gpu swiftshader_indirect
+            -noaudio
+            -no-boot-anim
+
           script: |
-            # Fix ADB offline issues
-            adb kill-server || true
-            rm -f ~/.android/adb_known_hosts
-            sleep 2
-            adb start-server
-            sleep 2
-            
-            # Wait for device to be ready
-            adb wait-for-device
-            adb shell 'while [[ -z "$(getprop sys.boot_completed)" ]]; do sleep 1; done;'
-            sleep 3
-            
-            # Verify device connection
+            echo "ADB devices:"
             adb devices
-            
-            # Start Appium server
-            appium --log appium.log &
-            sleep 5
-            
-            # Run tests
+
+            echo "Waiting for emulator..."
+            adb wait-for-device
+
+            echo "Waiting for Android boot completion..."
+            timeout 600 bash -c '
+            until adb shell getprop sys.boot_completed 2>/dev/null | grep -q "1"; do
+              sleep 5
+            done
+            '
+
+            echo "Unlocking device..."
+            adb shell input keyevent 82 || true
+
+            echo "Device status:"
+            adb devices
+            adb shell getprop ro.build.version.release
+
+            echo "Starting Appium..."
+            appium --log appium.log > appium.out 2>&1 &
+            sleep 15
+
+            echo "Running tests..."
             cd android_automation
             npm test
+
+      - name: Upload Appium logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-logs
+          path: |
+            appium.log
+            appium.out
 
       - name: Upload Appium report
         if: always()
