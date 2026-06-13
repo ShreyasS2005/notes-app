@@ -544,6 +544,17 @@ const wdioOptions = { hostname: '127.0.0.1', port: 4723, path: '/', logLevel: 'w
             // Find all Switch elements, then match by checking which row contains "Dark Atmosphere".
             // UiScrollable first to ensure the row is visible.
             await scrollToText(driver, 'Dark Atmosphere', 3);
+            let darkToggle;
+            const switchSelectors = [
+                'android=new UiSelector().className("android.widget.Switch")',
+                'android=new UiSelector().className("android.widget.CompoundButton")',
+            ];
+            for (const sel of switchSelectors) {
+                try {
+                    const els = await driver.$$(sel);
+                    // First switch is dark theme
+                    if (els.length >= 1) { darkToggle = els[0]; break; }
+                } catch (_) {}
             }
             if (darkToggle) {
                 await darkToggle.click();
