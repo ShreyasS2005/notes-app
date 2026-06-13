@@ -1,77 +1,73 @@
 name: E2E Tests Reports
 
 on:
-push:
-branches: [main]
-pull_request:
-branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-selenium-e2e:
-name: Selenium E2E Tests
-runs-on: ubuntu-latest
+  selenium-e2e:
+    name: Selenium E2E Tests
+    runs-on: ubuntu-latest
 
-```
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v5
-    with:
-      node-version: "20"
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
 
-  - name: Install web dependencies
-    working-directory: website
-    run: npm install
+      - name: Install web dependencies
+        working-directory: website
+        run: npm install
 
-  - name: Run Selenium Tests and Generate JUnit Report
-    working-directory: website
-    run: |
-      npm install --save-dev mocha-junit-reporter
+      - name: Run Selenium Tests and Generate JUnit Report
+        working-directory: website
+        run: |
+          npm install --save-dev mocha-junit-reporter
 
-      npm run dev &
+          npm run dev &
 
-      echo "Waiting for application..."
-      for i in {1..60}; do
-        if curl -s http://localhost:3000 > /dev/null; then
-          echo "Application started"
-          break
-        fi
-        sleep 2
-      done
+          echo "Waiting for application..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "Application started"
+              break
+            fi
+            sleep 2
+          done
 
-      HEADLESS=true npm test || true
+          HEADLESS=true npm test || true
 
-  - name: Appium Test Results
-    if: always()
-    uses: mikepenz/action-junit-report@v5
-    with:
-      report_paths: "website/reports/**/*.xml"
-      detailed_summary: true
-      include_passed: true
+      - name: Selenium Test Results
+        if: always()
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: "website/reports/**/*.xml"
+          detailed_summary: true
+          include_passed: true
 
-  - name: Upload Selenium Report
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: selenium-test-report
-      path: website/reports/
-```
+      - name: Upload Selenium Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-report
+          path: website/reports/
 
-appium-report:
-name: Upload Existing Appium Report
-runs-on: ubuntu-latest
+  appium-report:
+    name: Upload Existing Appium Report
+    runs-on: ubuntu-latest
 
-```
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  - name: Upload Existing Appium Report
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: android-appium-report
-      path: android_automation/reports/android-appium-report_2026-06-11T14-55-56.xlsx
-```
+      - name: Upload Existing Appium Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-appium-report
+          path: android_automation/reports/
