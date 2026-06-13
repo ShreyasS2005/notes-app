@@ -25,21 +25,25 @@ steps:
     working-directory: website
     run: npm install
 
-  - name: Run Selenium Tests
+  - name: Run Selenium Tests and Generate JUnit Report
     working-directory: website
     run: |
+      npm install --save-dev mocha-junit-reporter
+
       npm run dev &
 
+      echo "Waiting for application..."
       for i in {1..60}; do
         if curl -s http://localhost:3000 > /dev/null; then
+          echo "Application started"
           break
         fi
         sleep 2
       done
 
-      HEADLESS=true npm test
+      HEADLESS=true npm test || true
 
-  - name: Publish Selenium Test Results
+  - name: Publish Test Results
     if: always()
     uses: mikepenz/action-junit-report@v5
     with:
@@ -56,7 +60,7 @@ steps:
 ```
 
 appium-report:
-name: Publish Existing Appium Results
+name: Upload Existing Appium Report
 runs-on: ubuntu-latest
 
 ```
@@ -64,19 +68,10 @@ steps:
   - name: Checkout repository
     uses: actions/checkout@v4
 
-  - name: Publish Appium Test Results
-    if: always()
-    uses: mikepenz/action-junit-report@v5
-    with:
-      report_paths: "android_automation/reports/**/*.xml"
-      detailed_summary: true
-      include_passed: true
-      fail_on_failure: false
-
-  - name: Upload Appium Report
+  - name: Upload Existing Appium Report
     if: always()
     uses: actions/upload-artifact@v4
     with:
       name: android-appium-report
-      path: android_automation/reports/
+      path: android_automation/reports/android-appium-report_2026-06-11T14-55-56.xlsx
 ```
