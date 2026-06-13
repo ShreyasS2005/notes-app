@@ -79,12 +79,30 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
-          force-avd-creation: false
+          force-avd-creation: true
           emulator-options: -no-snapshot-load -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            # Fix ADB offline issues
+            adb kill-server || true
+            rm -f ~/.android/adb_known_hosts
+            sleep 2
+            adb start-server
+            sleep 2
+            
+            # Wait for device to be ready
+            adb wait-for-device
+            adb shell 'while [[ -z "$(getprop sys.boot_completed)" ]]; do sleep 1; done;'
+            sleep 3
+            
+            # Verify device connection
+            adb devices
+            
+            # Start Appium server
             appium --log appium.log &
             sleep 5
+            
+            # Run tests
             cd android_automation
             npm test
 
